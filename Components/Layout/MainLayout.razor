@@ -1,0 +1,94 @@
+﻿@inherits LayoutComponentBase
+
+
+
+<MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudLayout>
+    <MudAppBar Elevation="1" Color="Color.Primary">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        <MudButton Variant="Variant.Outlined" Class="ml-3" Href="/">Pokémon App MAUI</MudButton>
+        <MudSpacer />
+        <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle" />
+        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+            <MudMenuItem>Enlist</MudMenuItem>
+            <MudMenuItem>Barracks</MudMenuItem>
+            <MudMenuItem>Armory</MudMenuItem>
+        </MudMenu>
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2" Style="border-radius: 15px; "  >
+        <NavMenu />
+    </MudDrawer>
+    <MudMainContent Class="mt-16 pa-4">
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+@code {
+    private bool _drawerOpen = true;
+    private bool _isDarkMode = true;
+    private MudTheme? _theme = null;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        _theme = new MudTheme
+        {
+            PaletteLight = _lightPalette,
+            PaletteDark = _darkPalette,
+            LayoutProperties = new LayoutProperties()
+        };
+    }
+
+    private void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private void DarkModeToggle()
+    {
+        _isDarkMode = !_isDarkMode;
+    }
+
+   
+    private readonly PaletteLight _lightPalette = new()
+    {
+        Primary = "#FF0000", // Rojo Pokémon
+        Secondary = "#FFFFFF", // Blanco Pokémon
+        AppbarText = "#FFFFFF", // Texto blanco en la barra
+        AppbarBackground = "#FF0000", // Rojo para el AppBar
+        DrawerBackground = "#FFFFFF", // Fondo blanco para el Drawer
+        DrawerText = "#FF0000", // Texto rojo para el Drawer
+        TextPrimary = "#000000", // Texto principal en negro
+        TextSecondary = "#707070", // Texto secundario
+        ActionDefault = "#FFD700", // Amarillo Pikachu para acentos
+    };
+
+    private readonly PaletteDark _darkPalette = new()
+    {
+        Primary = "#FF4500", // Rojo más oscuro
+        Secondary = "#FFFFFF", // Blanco para contrastes
+        AppbarText = "#FFD700", // Amarillo para el texto en modo oscuro
+        AppbarBackground = "#2C2C2C", // Fondo oscuro
+        DrawerBackground = "#333333", // Fondo oscuro para el Drawer
+        DrawerText = "#FFD700", // Texto amarillo en modo oscuro
+        TextPrimary = "#FFFFFF", // Texto principal blanco
+        TextSecondary = "#BBBBBB", // Texto secundario gris claro
+        ActionDefault = "#FF0000", // Acentos en rojo
+    };
+
+    public string DarkLightModeButtonIcon => _isDarkMode switch
+    {
+        true => Icons.Material.Rounded.AutoMode,
+        false => Icons.Material.Outlined.DarkMode,
+    };
+}
