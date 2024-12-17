@@ -39,9 +39,7 @@
                 @selectedPokemon?.ToUpper()
             </MudPaper>
             <MudDivider/>
-            <MudPaperStyle="font-size: 24px" Outlined="true" Class="d-flex justify-center mud-theme-warning py-8 px-10 rounded-ts-xl rounded-te-xl" Elevation="4">
 
-            </MudPaperStyle>
 
 
         </MudCardContent>
@@ -52,8 +50,9 @@
     private List<string>? pokemonNames;
     private string selectedPokemon = "Selecciona un Pokemon";
     private bool _processing = false;
+    private List<string>? pokemonIDs;
 
-    
+
     async Task Limpiar()
     {
         _processing = true;
@@ -61,19 +60,28 @@
         _processing = false;
         selectedPokemon = "Selecciona un Pokemon";
     }
-    
+
     protected override async Task OnInitializedAsync()
     {
         try
         {
             var pokemonList = await PokeApiService.GetPokeListAsync();
             pokemonNames = pokemonList.Select(p => p.Name).ToList();
+            pokemonIDs = pokemonList.Select(p => p.Url).ToList();
+
+            
+
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error al cargar los nombres de Pokémon: {ex.Message}");
         }
     }
+    public string GetPokemonImageUrl(string pokemonUrl)
+            {
+                var id = pokemonUrl.TrimEnd('/').Split('/').Last();
+                return $"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{id}.png";
+            }
 }
 
 
