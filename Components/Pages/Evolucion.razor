@@ -10,6 +10,7 @@
             @foreach (var name in pokemonNames)
             {
                 <MudSelectItem T="string" Value="@name">@name</MudSelectItem>
+                
             }
         }
         else
@@ -20,6 +21,7 @@
 
     <MudDivider />
 
+ 
     <MudCard>
         <MudButton EndIcon="@Icons.Material.Filled.Delete" Variant="Variant.Filled" Class="red default white-text shades text" FullWidth="true" OnClick="Limpiar">
             @if (_processing)
