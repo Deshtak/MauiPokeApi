@@ -19,9 +19,23 @@ public class PokeApiService
 
     public async Task<List<ListaInfo>> GetPokeListAsync()
     {
-        var request = new RestRequest("pokemon?limit=100000&offset=0", Method.Get);
-        var response = await _client.GetAsync<ListPokemon>(request);
-        return response?.Results ?? new List<ListaInfo>();
+        try
+        {
+            var request = new RestRequest("pokemon?limit=100000&offset=0", Method.Get);
+            var response = await _client.GetAsync<ListPokemon>(request);
+
+            if (response == null || response.Results == null)
+            {
+                throw new Exception("No se pudo obtener la lista de Pokémon de la API.");
+            }
+
+            return response.Results;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al obtener la lista de Pokémon: {ex.Message}");
+            return new List<ListaInfo>();
+        }
     }
 
 
