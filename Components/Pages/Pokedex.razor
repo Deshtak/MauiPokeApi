@@ -20,6 +20,7 @@
     <MudText Typo="Typo.h4" Class="red Default white-text shades-text text-center mb-4 rounded-lg" >Pokédex</MudText>
     <MudTextField @bind-Value="pokemonName" Label="Buscar Pokémon" Variant="Variant.Outlined" Color="Color.Primary" />
     <MudButton OnClick="FetchPokemon" Color="Color.Primary" Class="mt-2">Buscar</MudButton>
+    <MudButton OnClick="ClearFields" Color="Color.Primary" Class="mt-2 ml-2">Limpiar</MudButton>
 
     @if (pokemon != null)
     {
@@ -146,4 +147,13 @@
             _ => Color.Error
         };
     }
+
+    private void ClearFields()
+    {
+        pokemonName = string.Empty;
+        pokemon = null;
+        pokemonImage = null;
+        errorMessage = null;
+    }
+
 }
