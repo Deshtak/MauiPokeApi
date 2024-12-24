@@ -1,5 +1,8 @@
 ﻿@page "/pokelist"
+@using static PokeApiService
 @inject PokeApiService PokeApiService
+@inject SharedPokemonService SharedPokemonService
+@inject NavigationManager NavigationManager
 
 <MudContainer MaxWidth="MaxWidth.Medium">
     <MudText Typo="Typo.h4" Class="text-center mb-4" Color="Color.Primary">Lista de Pokémon</MudText>
@@ -10,10 +13,17 @@
         @foreach (var pokemon in pokemonList)
         {
         <MudItem xs="12" sm="6" md="4" lg="3">
-            <MudCard Class="mt-4" Style="background-color: #FFFFFF; border: 2px solid #FF0000; border-radius: 16px;">
-                <MudCardContent Style="align-items: center">
+                    <MudCard Class="mt-4" Style="background-color: #FFFFFF; border: 2px solid #FF0000; border-radius: 16px;" d-flex flex-column align-items-center>
+                <MudCardContent d-flex flex-column align-items-center>
                     <img src="@GetPokemonImageUrl(pokemon.Url)" alt="@pokemon.Name" style="width:100px; height:100px;" />
                     <MudText Align="Align.Center" Typo="Typo.h5" Color="Color.Primary">@pokemon.Name</MudText>
+                            <MudIconButton Align="Align.Center"
+                                           Class="mt-4 d-flex flex-column align-items-center red default white-text shades text"
+                                           Variant="Variant.Filled"
+                                           FullWidth="true"
+                                           OnClick="() => SelectPokemon(pokemon.Name)"
+                                           Icon="@Icons.Material.Outlined.AddCircle">
+                                       </MudIconButton>
                 </MudCardContent>
             </MudCard>
         </MudItem>
@@ -33,7 +43,19 @@
 
 
 @code {
-private List<ListaInfo>? pokemonList;
+    
+    private void SelectPokemon(string pokemonName)
+    {
+        SharedPokemonService.SetSelectedPokemon(pokemonName);
+        NavigationManager.NavigateTo("/");
+    }
+
+    private void NavigateToPokedex(string pokemonName)
+    {
+        NavigationManager.NavigateTo($"/?pokemonName={pokemonName}");
+    }
+
+    private static List<ListaInfo>? pokemonList;
 
     Color Color = Color.Success;
     private void OnScroll(ScrollEventArgs e)
@@ -45,6 +67,11 @@ private List<ListaInfo>? pokemonList;
             var x when x < 2500 => Color.Tertiary,
             _ => Color.Error
         };
+    }
+
+    public async Task PokedexRed()
+    {
+        
     }
 
     protected override async Task OnInitializedAsync()

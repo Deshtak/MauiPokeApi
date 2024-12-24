@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using MudBlazor;
 using MudBlazor.Services;
+using static PokeApiService;
 
 
 
@@ -20,6 +21,7 @@ namespace MauiPokeApi
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 });
             builder.Services.AddSingleton<PokeApiService>();
+            builder.Services.AddSingleton<SharedPokemonService>();
 
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddMudServices();

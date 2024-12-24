@@ -59,9 +59,9 @@
 </MudContainer>
 
 @code {
-    private List<ListaInfo>? pokemonList; // Lista que contiene nombres y URLs de los Pokémon.
+    private static List<ListaInfo>? pokemonList; // Lista que contiene nombres y URLs de los Pokémon.
     private bool _processing = false;
-    private ListaInfo? selectedPokemon;  // Pokémon seleccionado.
+    private static ListaInfo? selectedPokemon;  // Pokémon seleccionado.
     private string errorMessage = ""; // Mensaje de error
 
     async Task Limpiar()
@@ -98,6 +98,12 @@
     {
         var id = pokemonUrl.TrimEnd('/').Split('/').Last();
         return $"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{id}.png";
+    }
+
+    public string GetPokemonId(string pokemonUrl)
+    {
+        var id = pokemonUrl.TrimEnd('/').Split('/').Last();
+        return id;
     }
 }
 

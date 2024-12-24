@@ -10,12 +10,29 @@ public class PokeApiService
         _client = new RestClient("https://pokeapi.co/api/v2/");
     }
 
+
+    public class SharedPokemonService
+    {
+        public string? SelectedPokemon { get; private set; }
+
+        public event Action? OnPokemonSelected;
+
+        public void SetSelectedPokemon(string pokemonName)
+        {
+            SelectedPokemon = pokemonName;
+            OnPokemonSelected?.Invoke();
+        }
+    }
+
+
     // Método para obtener un solo Pokémon por nombre
     public async Task<Pokemon?> GetPokemonAsync(string name)
     {
         var request = new RestRequest($"pokemon/{name}", Method.Get);
         return await _client.GetAsync<Pokemon>(request);
     }
+
+    
 
     public async Task<List<ListaInfo>> GetPokeListAsync()
     {
@@ -38,8 +55,44 @@ public class PokeApiService
         }
     }
 
+    public async Task<List<EvolInfo?>> GetEvoChainsAsync(string id)
+    {
+        try 
+        {
+            var request = new RestRequest($"evolution-chain/{id}", Method.Get);
+            var response = await _client.GetAsync<EvoChain?>(request);
+
+            if (response == null || response.Evol == null)
+            {
+                throw new Exception("No se pudo obtener la lista de Pokémon de la API.");
+            }
+
+            return response.Evol;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al obtener la lista de Pokémon: {ex.Message}");
+            return new List<EvolInfo>();
+        }
+
+    }
 
 
+}
+
+
+//Clase para la cadena evolutiva
+
+public class EvoChain
+{
+    public List<EvolInfo> Evol { get; set; } = new List<EvolInfo>();
+
+}
+
+public class EvolInfo
+{
+    public string Name { get; set; }
+    public string Description { get; set; }
 }
 
 // Clases para representar la respuesta de la API
