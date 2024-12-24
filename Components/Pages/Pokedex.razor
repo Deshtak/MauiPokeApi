@@ -19,7 +19,7 @@
 <MudContainer MaxWidth="MaxWidth.Medium">
     <MudText Typo="Typo.h4" Class="red Default white-text shades-text text-center mb-4 rounded-lg" >Pokédex</MudText>
     <MudTextField OnKeyUp="HandleKeyUp" @bind-Value="pokemonName" Label="Buscar Pokémon" Variant="Variant.Outlined" Color="Color.Primary" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary" />
-    <MudButton OnClick="SearchByButton" Color="Color.Primary" Class="mt-2">Buscar</MudButton>
+    <MudButton OnClick="SearchByButton" Color="Color.Primary" Class="mt-2 ml-2">Buscar</MudButton>
     <MudButton OnClick="ClearFields" Color="Color.Primary" Class="mt-2 ml-2">
         @if (_processing)
         {
@@ -185,17 +185,25 @@
 
     private async void ClearFields()
     {
-        _processing = true;
-        await Task.Delay(800);
-        pokemonName = string.Empty;
-        Console.WriteLine(pokemonName);
-        pokemon = null;
-        Console.WriteLine(pokemon);
-        pokemonImage = null;
-        Console.WriteLine(pokemonImage);
-        errorMessage = null;
-        _processing = false;
-        StateHasChanged();
+        if(pokemonName!=string.Empty)
+        {
+            _processing = true;
+            await Task.Delay(800);
+            pokemonName = string.Empty;
+            Console.WriteLine(pokemonName);
+            pokemon = null;
+            Console.WriteLine(pokemon);
+            pokemonImage = null;
+            Console.WriteLine(pokemonImage);
+            errorMessage = null;
+            _processing = false;
+            StateHasChanged();
+        }
+        else
+        {
+            errorMessage = "El campo esta vacio, no hay nada que borrar";
+        }
+
     }
 
 }
