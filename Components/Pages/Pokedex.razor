@@ -18,9 +18,19 @@
 
 <MudContainer MaxWidth="MaxWidth.Medium">
     <MudText Typo="Typo.h4" Class="red Default white-text shades-text text-center mb-4 rounded-lg" >Pokédex</MudText>
-    <MudTextField @bind-Value="pokemonName" Label="Buscar Pokémon" Variant="Variant.Outlined" Color="Color.Primary" />
-    <MudButton OnClick="FetchPokemon" Color="Color.Primary" Class="mt-2">Buscar</MudButton>
-    <MudButton OnClick="ClearFields" Color="Color.Primary" Class="mt-2 ml-2">Limpiar</MudButton>
+    <MudTextField OnKeyUp="HandleKeyUp" @bind-Value="pokemonName" Label="Buscar Pokémon" Variant="Variant.Outlined" Color="Color.Primary" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary" />
+    <MudButton OnClick="SearchByButton" Color="Color.Primary" Class="mt-2">Buscar</MudButton>
+    <MudButton OnClick="ClearFields" Color="Color.Primary" Class="mt-2 ml-2">
+        @if (_processing)
+        {
+            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+            <MudText Class="ms-2">Procesando</MudText>
+        }
+        else
+        {
+            <MudText Class="mt-2 ml-2" Color="Color.Default">Limpiar</MudText>
+        }
+    </MudButton>
 
     @if (pokemon != null)
     {
@@ -78,8 +88,22 @@
     private static Pokemon? pokemon;
     private static string? pokemonImage;
     private string? errorMessage;
+    private bool _processing = false;
 
-
+    private async Task HandleKeyUp(KeyboardEventArgs e)
+    {
+        if(pokemonName != string.Empty)
+        {
+            if (e.Key == "Enter")
+            {
+                await FetchPokemon();
+            }
+        }
+        else
+        {
+            errorMessage = $"Error al buscar el Pokémon: No se inserto ningun nombre";
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -90,6 +114,17 @@
         }
     }
 
+    private async Task SearchByButton()
+    {
+        if (pokemonName != string.Empty)
+        {
+            await FetchPokemon();
+        }
+        else
+        {
+            errorMessage = $"Error al buscar el Pokémon: No se inserto ningun nombre";
+        }
+    }
 
     private async Task FetchPokemon()
     {
@@ -148,12 +183,19 @@
         };
     }
 
-    private void ClearFields()
+    private async void ClearFields()
     {
+        _processing = true;
+        await Task.Delay(800);
         pokemonName = string.Empty;
+        Console.WriteLine(pokemonName);
         pokemon = null;
+        Console.WriteLine(pokemon);
         pokemonImage = null;
+        Console.WriteLine(pokemonImage);
         errorMessage = null;
+        _processing = false;
+        StateHasChanged();
     }
 
 }
