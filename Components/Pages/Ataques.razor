@@ -1,0 +1,167 @@
+@page "/attacks"
+
+@using static PokeApiService
+@inject PokeApiService PokeApiService
+@inject NavigationManager NavigationManager
+
+
+<MudContainer>
+    <MudSpacer />
+    <MudTextField OnKeyUp="HandleKeyUp" @bind-Value="pokemonMove" Label="Buscar movimiento" Variant="Variant.Outlined" Color="Color.Primary" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary" Disabled="@enabledvar" />
+    <MudText Typo="Typo.h4" Class="red Default white-text shades-text text-center mb-4 rounded-lg">Directorio de movimientos</MudText>
+
+    <MudFab OnClick="SearchByButton" Color="Color.Primary" Class="mt-2 ml-2" Disabled="@Dissearch" StartIcon="@Icons.Material.Filled.Search">Buscar</MudFab>
+    <MudFab OnClick="ClearFields" Color="Color.Primary" Class="@clase" Disabled="@Disclear" StartIcon="@iconchange" >
+        @if (_processing)
+        {
+            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+        }
+        else
+        {
+            <MudText Class="mt-2 ml-2" Color="Color.Default">Limpiar</MudText>
+        }
+    </MudFab>
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="@progressvisibilty" />
+
+
+ 
+
+    @if (movelist != null)
+    {
+        <MudCard Class="mt-4" Style="background-color: #FFFFFF; border: 2px solid #FF0000; border-radius: 16px;">
+            
+            <MudCardContent>
+                <MudText Align="Align.Center" Typo="Typo.h5" Color="Color.Primary">@movelist.Name.ToUpper()</MudText>
+                <MudText Align="Align.Center" Typo="Typo.subtitle1" Color="Color.Primary">ID: @movelist.Id</MudText>
+                <MudText Align="Align.Center" Typo="Typo.subtitle1" Color="Color.Primary">Power: @movelist.Power</MudText>
+                <MudText Align="Align.Center" Typo="Typo.subtitle1" Color="Color.Primary">PowerPoints: @movelist.Pp</MudText>
+                <MudText Align="Align.Center" Typo="Typo.subtitle1" Color="Color.Primary">Priority: @movelist.Priority</MudText>
+                <MudText Align="Align.Center" Typo="Typo.subtitle1" Color="Color.Primary">Accuracy: @movelist.Accuracy</MudText>
+                
+                <MudChipSet Style="display: flex; justify-content: center;" T="string">
+                    @if (movelist.Effect_Entries != null && movelist.Effect_Entries.Any())
+                    {
+                        <MudSimpleTable Style="overflow-x: auto; border-radius: 15px;" Class="pa-4 red-text text-accent-4 justify-content-center">
+                            @foreach (var effect in movelist.Effect_Entries)
+                            {
+                                <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled">@effect.Effect</MudChip>
+                            }
+
+                            @foreach (var effect in movelist.Effect_Entries)
+                            {
+                                <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled">@effect.ShortEffect</MudChip>
+                            }
+                        </MudSimpleTable>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.subtitle1" Color="Color.Warning">No hay efectos disponibles para este movimiento.</MudText>
+                    }
+                </MudChipSet>
+                
+                
+            </MudCardContent>
+        </MudCard>
+    }
+    else if (errorMessage != null)
+    {
+        <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+    }
+
+
+</MudContainer>
+
+
+
+@code{
+    private string? errorMessage;
+    private bool _processing = false;
+    private static Movelist? movelist;
+    private string pokemonMove = string.Empty;
+    private bool enabledvar=false;
+    private bool Dissearch = false;
+    private bool Disclear = true;
+    private string iconchange = @Icons.Material.Filled.Cancel;
+    private bool chargev = true;
+    private string clase = "invisible";
+    private string progressvisibilty = "invisible";
+
+    private async void ClearFields()
+    {
+        if (pokemonMove != string.Empty)
+        {
+            _processing = true;
+            clase = "invisible";
+            progressvisibilty = "my-7";
+            await Task.Delay(1000);
+            progressvisibilty = "invisible";
+            pokemonMove = string.Empty;
+            Console.WriteLine(pokemonMove);
+            movelist = null;
+            Console.WriteLine(movelist);
+            errorMessage = null;
+            _processing = false;
+            Dissearch = false;
+            Disclear = true;
+            enabledvar = false;
+            StateHasChanged();
+        }
+        else
+        {
+            errorMessage = "El campo esta vacio, no hay nada que borrar";
+        }
+
+    }
+
+    private async Task HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (pokemonMove != string.Empty)
+        {
+            if (e.Key == "Enter")
+            {
+                await FetchMoves();
+            }
+        }
+
+
+    }
+
+    private async Task SearchByButton()
+    {
+        if (pokemonMove != string.Empty)
+        {
+            await FetchMoves();
+        }
+        else
+        {
+            errorMessage = $"Error al buscar el Movimiento: No se inserto ningun nombre o ID";
+        }
+    }
+
+    private async Task FetchMoves()
+    {
+        if(pokemonMove is string)
+            try
+            {
+                errorMessage = null;
+                movelist = await PokeApiService.GetMovesAsync(pokemonMove.ToLower());
+
+                if (movelist != null)
+                {
+                    enabledvar = true;
+                    Dissearch = true;
+                    Disclear = false;
+                    clase = "mt-2 ml-2";
+                }
+                else
+                {
+                errorMessage = "No se pudo encontrar el Movimiento. Verifica el nombre ingresado.";
+                }
+            }
+            catch (Exception ex)
+            {
+                movelist = null;
+                errorMessage = $"Error al buscar el Movimiento: {ex.Message}";
+            }
+    }
+}

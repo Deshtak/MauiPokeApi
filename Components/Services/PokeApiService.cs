@@ -1,5 +1,5 @@
-﻿using MauiPokeApi.Components.Pages;
-using RestSharp;
+﻿using RestSharp;
+using System.Text.Json.Serialization;
 
 public class PokeApiService
 {
@@ -54,6 +54,17 @@ public class PokeApiService
             return new List<ListaInfo>();
         }
     }
+
+    public async Task<Movelist> GetMovesAsync(string name)
+    { 
+        var request = new RestRequest($"move/{name}", Method.Get);
+        return await _client.GetAsync<Movelist>(request);
+    }
+
+
+
+
+    //Cadena evolutiva
 
     public async Task<List<EvolInfo?>> GetEvoChainsAsync(string id)
     {
@@ -123,7 +134,29 @@ public class Pokemon
     public List<MoveWrapper> Moves { get; set; }
 }
 
+public class Movelist
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public int? Power { get; set; }
+    public int? Pp { get; set; }
+    public int? Priority { get; set; }
+    public int? Accuracy { get; set; }
+    [JsonPropertyName("effect_entries")]
+    public List<EffectEntries> Effect_Entries { get; set; }
 
+
+
+}
+
+public class EffectEntries
+{
+    [JsonPropertyName("effect")]
+    public string Effect { get; set; }
+
+    [JsonPropertyName("short_effect")]
+    public string ShortEffect { get; set; }
+}
 
 public class TypeWrapper
 {
