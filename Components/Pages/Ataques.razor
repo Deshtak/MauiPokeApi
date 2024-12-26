@@ -122,6 +122,14 @@
                 await FetchMoves();
             }
         }
+        else
+        {
+            if (e.Key == "Enter")
+            {
+                errorMessage = $"Error al buscar el Pokémon: No se inserto ningun nombre";
+            }
+
+        }
 
 
     }

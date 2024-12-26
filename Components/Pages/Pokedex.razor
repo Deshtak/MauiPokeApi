@@ -101,7 +101,11 @@
         }
         else
         {
-            errorMessage = $"Error al buscar el Pokémon: No se inserto ningun nombre";
+            if (e.Key == "Enter")
+            {
+                errorMessage = $"Error al buscar el Pokémon: No se inserto ningun nombre";
+            }
+            
         }
     }
 
