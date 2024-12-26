@@ -22,6 +22,7 @@ namespace MauiPokeApi
                 });
             builder.Services.AddSingleton<PokeApiService>();
             builder.Services.AddSingleton<SharedPokemonService>();
+            builder.Services.AddSingleton<SharedMoveService>();
 
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddMudServices();

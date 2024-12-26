@@ -3,6 +3,7 @@
 @using static PokeApiService
 @inject PokeApiService PokeApiService
 @inject NavigationManager NavigationManager
+@inject SharedMoveService SharedMoveService
 
 
 <MudContainer>
@@ -86,6 +87,16 @@
     private string clase = "invisible";
     private string progressvisibilty = "invisible";
 
+
+    private async void OnMoveSelected()
+    {
+        if (!string.IsNullOrEmpty(SharedMoveService.SelectedMove))
+        {
+            pokemonMove = SharedMoveService.SelectedMove;
+            await FetchMoves();
+        }
+    }
+
     private async void ClearFields()
     {
         if (pokemonMove != string.Empty)
@@ -148,7 +159,6 @@
 
     private async Task FetchMoves()
     {
-        if(pokemonMove is string)
             try
             {
                 errorMessage = null;
@@ -171,5 +181,10 @@
                 movelist = null;
                 errorMessage = $"Error al buscar el Movimiento: {ex.Message}";
             }
+    }
+    protected override void OnInitialized()
+    {
+        // Suscribirse al evento cuando el componente se inicializa.
+        SharedMoveService.OnMoveSelected += OnMoveSelected;
     }
 }

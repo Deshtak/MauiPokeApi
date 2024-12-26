@@ -24,6 +24,19 @@ public class PokeApiService
         }
     }
 
+    public class SharedMoveService
+    {
+        public string? SelectedMove { get; private set; }
+
+        public event Action? OnMoveSelected;
+
+        public void SetSelectedMove(string pokemonMove)
+        {
+            SelectedMove = pokemonMove;
+            OnMoveSelected?.Invoke();
+        }
+    }
+
 
     // Método para obtener un solo Pokémon por nombre
     public async Task<Pokemon?> GetPokemonAsync(string name)

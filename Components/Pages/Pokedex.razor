@@ -3,6 +3,7 @@
 @inject PokeApiService PokeApiService
 @inject NavigationManager NavigationManager
 @inject SharedPokemonService SharedPokemonService
+@inject SharedMoveService SharedMoveService
 
 
 
@@ -57,15 +58,14 @@
                 </MudChipSet>
                 <MudText Align="Align.Center" Typo="Typo.body1" Class="pa-4 red shades-text text-white" Style="border-radius: 15px;">Movimientos:</MudText>
                 <MudDivider/>
-                <MudSimpleTable Style="overflow-x: auto; border-radius: 15px;">
-                    <tbody>
-                    @foreach (var move in pokemon.Moves)
-                    {
-                        <MudText Align="Align.Center" Typo="Typo.body1" Class="pa-4 blue text-white" Style="border-radius: 15px;">@move.Move.Name.ToUpper()</MudText>
-                        <MudDivider/>
-                    }
-                    </tbody>
-                </MudSimpleTable>
+                <MudBreakpointProvider Class="mt-4" Style="background-color: ##8D06B2; border: 2px solid #FF0000; border-radius: 16px;">
+                        @foreach (var move in pokemon.Moves)
+                        {
+                        <MudHidden>
+                            <MudButton Class="pa-4 blue text-white" Style="border-radius: 15px;" OnClick="() => SelectMove(move.Move.Name)">@move.Move.Name.ToUpper()</MudButton>
+                        </MudHidden>
+                        }
+                </MudBreakpointProvider>
                 
             </MudCardContent>
         </MudCard>
@@ -105,7 +105,7 @@
             {
                 errorMessage = $"Error al buscar el Pokémon: No se inserto ningun nombre";
             }
-            
+
         }
     }
 
@@ -159,6 +159,17 @@
         // Suscribirse al evento cuando el componente se inicializa.
         SharedPokemonService.OnPokemonSelected += OnPokemonSelected;
     }
+
+    private void SelectMove(string pokemonMove)
+    {
+        SharedMoveService.SetSelectedMove(pokemonMove);
+        NavigationManager.NavigateTo("/attacks");
+    }
+    private void NavigateToPokedex(string pokemonMove)
+    {
+        NavigationManager.NavigateTo($"/?pokemonMove={pokemonMove}");
+    }
+
 
     private async void OnPokemonSelected()
     {
