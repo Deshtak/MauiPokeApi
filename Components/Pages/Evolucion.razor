@@ -1,4 +1,5 @@
 @page "/evochain"
+@using static PokeApiService
 @inject PokeApiService PokeApiService
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
@@ -62,8 +63,15 @@
         try
         {
             errorMessage = "";
-            var id = GetPokemonId(selectedPokemon.Url);
-            evolutionChain = await PokeApiService.GetEvolutionChainAsync(id);
+            var chainUrl = await PokeApiService.GetEvolutionChainUrlAsync(selectedPokemon.Name);
+
+            if (string.IsNullOrEmpty(chainUrl))
+            {
+                errorMessage = "No se encontró URL de cadena evolutiva.";
+                return;
+            }
+
+            evolutionChain = await PokeApiService.GetEvolutionChainAsync(chainUrl);
 
             if (evolutionChain == null || !evolutionChain.Any())
             {
@@ -74,10 +82,5 @@
         {
             errorMessage = $"Error al obtener la cadena evolutiva: {ex.Message}";
         }
-    }
-
-    private string GetPokemonId(string pokemonUrl)
-    {
-        return pokemonUrl.TrimEnd('/').Split('/').Last();
     }
 }

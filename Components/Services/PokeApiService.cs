@@ -45,7 +45,7 @@ public class PokeApiService
         return await _client.GetAsync<Pokemon>(request);
     }
 
-    
+
 
     public async Task<List<ListaInfo>> GetPokeListAsync()
     {
@@ -69,7 +69,7 @@ public class PokeApiService
     }
 
     public async Task<Movelist> GetMovesAsync(string name)
-    { 
+    {
         var request = new RestRequest($"move/{name}", Method.Get);
         return await _client.GetAsync<Movelist>(request);
     }
@@ -79,11 +79,33 @@ public class PokeApiService
 
     //Cadena evolutiva
 
-    public async Task<List<string>> GetEvolutionChainAsync(string id)
+    public async Task<string?> GetEvolutionChainUrlAsync(string pokemonName)
     {
         try
         {
-            var request = new RestRequest($"evolution-chain/{id}", Method.Get);
+            var request = new RestRequest($"pokemon-species/{pokemonName}", Method.Get);
+            var response = await _client.GetAsync<SpeciesResponse>(request);
+
+            if (response == null || string.IsNullOrEmpty(response.evolution_chain?.url))
+            {
+                throw new Exception("No se pudo obtener la URL de la cadena evolutiva.");
+            }
+
+            return response.evolution_chain.url;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al obtener la URL de la cadena evolutiva: {ex.Message}");
+            return null;
+        }
+    }
+
+    // Obtener cadena evolutiva
+    public async Task<List<string>> GetEvolutionChainAsync(string url)
+    {
+        try
+        {
+            var request = new RestRequest(url, Method.Get);
             var response = await _client.GetAsync<EvolutionChainResponse>(request);
 
             if (response == null || response.chain == null)
@@ -108,114 +130,121 @@ public class PokeApiService
             Console.WriteLine($"Error al obtener la cadena evolutiva: {ex.Message}");
             return new List<string>();
         }
-
-
-        // Método auxiliar para recorrer la cadena evolutiva
-        
     }
-}
 
 
 
 
 
-//Clase para la cadena evolutiva
+    //Clase para la cadena evolutiva
 
-public class EvolutionChainResponse
-{
-    public Chain chain { get; set; }
-}
+    public class SpeciesResponse
+    {
+        public EvolutionChainInfo evolution_chain { get; set; }
+    }
 
-public class Chain
-{
-    public Species species { get; set; }
-    public List<Chain> evolves_to { get; set; }
-}
+    public class EvolutionChainInfo
+    {
+        public string url { get; set; }
+    }
 
-public class Species
-{
-    public string name { get; set; }
-}
+    // Clases para la respuesta de `evolution-chain`
+    public class EvolutionChainResponse
+    {
+        public Chain chain { get; set; }
+    }
 
+    public class Chain
+    {
+        public Species species { get; set; }
+        public List<Chain> evolves_to { get; set; }
+    }
 
-// Clases para representar la respuesta de la API
-
-//clases para el listado de pokemones completo
-
-public class ListPokemon
-{
-    public List<ListaInfo> Results { get; set; } = new List<ListaInfo>();
-}
-
-public class ListaInfo
-{
-    public string Name { get; set; }
-    public string Url { get; set; }
-}
-
-//
+    public class Species
+    {
+        public string name { get; set; }
+    }
 
 
-// Clases para los detalles de cada Pokémon, primera pagina
-public class Pokemon
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public List<TypeWrapper> Types { get; set; }
-    public List<AbilityWrapper> Abilities { get; set; }
-    public List<MoveWrapper> Moves { get; set; }
-}
+    // Clases para representar la respuesta de la API
 
-public class Movelist
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public int? Power { get; set; }
-    public int? Pp { get; set; }
-    public int? Priority { get; set; }
-    public int? Accuracy { get; set; }
-    [JsonPropertyName("effect_entries")]
-    public List<EffectEntries> Effect_Entries { get; set; }
+    //clases para el listado de pokemones completo
+
+    public class ListPokemon
+    {
+        public List<ListaInfo> Results { get; set; } = new List<ListaInfo>();
+    }
+
+    public class ListaInfo
+    {
+        public string Name { get; set; }
+        public string Url { get; set; }
+    }
+
+    //
 
 
+    // Clases para los detalles de cada Pokémon, primera pagina
+    public class Pokemon
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public List<TypeWrapper> Types { get; set; }
+        public List<AbilityWrapper> Abilities { get; set; }
+        public List<MoveWrapper> Moves { get; set; }
+    }
 
-}
+    public class Movelist
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int? Power { get; set; }
+        public int? Pp { get; set; }
+        public int? Priority { get; set; }
+        public int? Accuracy { get; set; }
+        [JsonPropertyName("effect_entries")]
+        public List<EffectEntries> Effect_Entries { get; set; }
 
-public class EffectEntries
-{
-    [JsonPropertyName("effect")]
-    public string Effect { get; set; }
 
-    [JsonPropertyName("short_effect")]
-    public string ShortEffect { get; set; }
-}
 
-public class TypeWrapper
-{
-    public TypeInfo Type { get; set; }
-}
+    }
 
-public class TypeInfo
-{
-    public string Name { get; set; }
-}
+    public class EffectEntries
+    {
+        [JsonPropertyName("effect")]
+        public string Effect { get; set; }
 
-public class MoveWrapper
-{
-    public MoveInfo Move { get; set; }
-}
+        [JsonPropertyName("short_effect")]
+        public string ShortEffect { get; set; }
+    }
 
-public class MoveInfo
-{
-    public string Name { get; set; }
-}
+    public class TypeWrapper
+    {
+        public TypeInfo Type { get; set; }
+    }
 
-public class AbilityWrapper
-{
-    public AbilityInfo Ability { get; set; }
-}
+    public class TypeInfo
+    {
+        public string Name { get; set; }
+    }
 
-public class AbilityInfo
-{
-    public string Name { get; set; }
+    public class MoveWrapper
+    {
+        public MoveInfo Move { get; set; }
+    }
+
+    public class MoveInfo
+    {
+        public string Name { get; set; }
+    }
+
+    public class AbilityWrapper
+    {
+        public AbilityInfo Ability { get; set; }
+    }
+
+    public class AbilityInfo
+    {
+        public string Name { get; set; }
+    }
 }
