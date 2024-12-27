@@ -86,16 +86,39 @@
     private bool chargev = true;
     private string clase = "invisible";
     private string progressvisibilty = "invisible";
+    public string? QueryMoveName { get; set; }
 
 
-    private async void OnMoveSelected()
+    protected override async Task OnInitializedAsync()
     {
         if (!string.IsNullOrEmpty(SharedMoveService.SelectedMove))
         {
             pokemonMove = SharedMoveService.SelectedMove;
             await FetchMoves();
         }
+        else if (!string.IsNullOrEmpty(QueryMoveName))
+        {
+            pokemonMove = QueryMoveName;
+            await FetchMoves();
+        }
     }
+
+
+    private async void OnMoveSelected()
+    {
+        Console.WriteLine($"SelectedMove: {SharedMoveService.SelectedMove}");
+        if (!string.IsNullOrEmpty(SharedMoveService.SelectedMove))
+        {
+            pokemonMove = SharedMoveService.SelectedMove;
+            await FetchMoves();
+            StateHasChanged();
+        }
+        else
+        {
+            Console.WriteLine("SelectedMove está vacío o es nulo.");
+        }
+    }
+
 
     private async void ClearFields()
     {
@@ -182,6 +205,13 @@
                 errorMessage = $"Error al buscar el Movimiento: {ex.Message}";
             }
     }
+
+    public void Dispose()
+    {
+        // Desuscribirse del evento para evitar memory leaks.
+        SharedMoveService.OnMoveSelected -= OnMoveSelected;
+    }
+
     protected override void OnInitialized()
     {
         // Suscribirse al evento cuando el componente se inicializa.
