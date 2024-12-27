@@ -79,45 +79,64 @@ public class PokeApiService
 
     //Cadena evolutiva
 
-    public async Task<List<EvolInfo?>> GetEvoChainsAsync(string id)
+    public async Task<List<string>> GetEvolutionChainAsync(string id)
     {
-        try 
+        try
         {
             var request = new RestRequest($"evolution-chain/{id}", Method.Get);
-            var response = await _client.GetAsync<EvoChain?>(request);
+            var response = await _client.GetAsync<EvolutionChainResponse>(request);
 
-            if (response == null || response.Evol == null)
+            if (response == null || response.chain == null)
             {
-                throw new Exception("No se pudo obtener la lista de Pokémon de la API.");
+                throw new Exception("No se pudo obtener la cadena evolutiva.");
             }
 
-            return response.Evol;
+            var evolutionNames = new List<string>();
+            var currentChain = response.chain;
+
+            // Recorremos la cadena evolutiva para extraer nombres
+            while (currentChain != null)
+            {
+                evolutionNames.Add(currentChain.species.name);
+                currentChain = currentChain.evolves_to.FirstOrDefault();
+            }
+
+            return evolutionNames;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al obtener la lista de Pokémon: {ex.Message}");
-            return new List<EvolInfo>();
+            Console.WriteLine($"Error al obtener la cadena evolutiva: {ex.Message}");
+            return new List<string>();
         }
 
+
+        // Método auxiliar para recorrer la cadena evolutiva
+        
     }
-
-
 }
+
+
+
 
 
 //Clase para la cadena evolutiva
 
-public class EvoChain
+public class EvolutionChainResponse
 {
-    public List<EvolInfo> Evol { get; set; } = new List<EvolInfo>();
-
+    public Chain chain { get; set; }
 }
 
-public class EvolInfo
+public class Chain
 {
-    public string Name { get; set; }
-    public string Description { get; set; }
+    public Species species { get; set; }
+    public List<Chain> evolves_to { get; set; }
 }
+
+public class Species
+{
+    public string name { get; set; }
+}
+
 
 // Clases para representar la respuesta de la API
 

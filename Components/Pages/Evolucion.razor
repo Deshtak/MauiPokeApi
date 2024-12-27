@@ -2,120 +2,82 @@
 @inject PokeApiService PokeApiService
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
-    <MudText Typo="Typo.h4" Class="text-center mb-4" Color="Color.Primary">Lista de Pokémon</MudText>
+    <MudText Typo="Typo.h4" Class="text-center mb-4" Color="Color.Primary">Cadena Evolutiva</MudText>
 
-    <!-- Selector de Pokémon -->
-    @if (!string.IsNullOrEmpty(errorMessage))
-    {
-        <MudText Typo="Typo.body1" Color="Color.Error">@errorMessage</MudText>
-    }
-    else if (pokemonList != null)
-    {
-        <MudSelect T="ListaInfo" @bind-Value="selectedPokemon" Label="Selecciona un Pokémon">
+    <MudSelect T="ListaInfo" @bind-Value="selectedPokemon" Label="Selecciona un Pokémon">
+        @if (pokemonList != null)
+        {
             @foreach (var pokemon in pokemonList)
             {
                 <MudSelectItem T="ListaInfo" Value="@pokemon">@pokemon.Name</MudSelectItem>
             }
-        </MudSelect>
-    }
-    else
-    {
-        <MudText Typo="Typo.body1" Color="Color.Info">Cargando lista de Pokémon...</MudText>
-    }
-
-
-
-    <MudDivider />
-
- 
-    <MudCard>
-        <MudButton EndIcon="@Icons.Material.Filled.Delete" Variant="Variant.Filled" Class="red default white-text shades text" FullWidth="true" OnClick="Limpiar">
-            @if (_processing)
-            {
-                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
-                <MudText Class="ms-2">Procesando</MudText>
-            }
-            else
-            {
-                <MudText Color="Color.Default">Limpiar Seleccion</MudText>
-            }
-        </MudButton>
-
-
-        @if (selectedPokemon != null)
-        {
-            <MudCard Class="mt-4">
-                <MudCardContent Class="d-flex flex-column align-items-center">
-                    <MudText Typo="Typo.h5" Class="mb-2">@selectedPokemon.Name.ToUpper()</MudText>
-                    <MudImage Src="@GetPokemonImageUrl(selectedPokemon.Url)" Alt="@selectedPokemon.Name" />
-
-                </MudCardContent>
-            </MudCard>
         }
+    </MudSelect>
 
+    <MudButton Variant="Variant.Filled" OnClick="FetchEvolutionChain" Disabled="selectedPokemon == null">
+        Ver Cadena Evolutiva
+    </MudButton>
 
-        
-    </MudCard>
+    <MudDivider Class="my-4" />
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <MudText Typo="Typo.body1" Color="Color.Error">@errorMessage</MudText>
+    }
+    else if (evolutionChain != null)
+    {
+        <MudList T="string">
+            @foreach (var evo in evolutionChain)
+            {
+                <MudListItem>
+                    <MudText Typo="Typo.body1">@evo</MudText>
+                </MudListItem>
+            }
+        </MudList>
+    }
 </MudContainer>
 
 @code {
-    private static List<ListaInfo>? pokemonList; // Lista que contiene nombres y URLs de los Pokémon.
-    private bool _processing = false;
-    private static ListaInfo? selectedPokemon;  // Pokémon seleccionado.
-    private string errorMessage = ""; // Mensaje de error
-
-    async Task Limpiar()
-    {
-        _processing = true;
-        await Task.Delay(800);
-        _processing = false;
-        selectedPokemon = null;
-
-    }
-
+    private List<ListaInfo>? pokemonList;
+    private ListaInfo? selectedPokemon;
+    private List<string>? evolutionChain;
+    private string errorMessage = "";
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            errorMessage = "";
             pokemonList = await PokeApiService.GetPokeListAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cargar la lista de Pokémon: {ex.Message}";
+        }
+    }
 
-            if (pokemonList == null || !pokemonList.Any())
+    private async Task FetchEvolutionChain()
+    {
+        if (selectedPokemon == null) return;
+
+        try
+        {
+            errorMessage = "";
+            var id = GetPokemonId(selectedPokemon.Url);
+            evolutionChain = await PokeApiService.GetEvolutionChainAsync(id);
+
+            if (evolutionChain == null || !evolutionChain.Any())
             {
-                errorMessage = "No se pudieron cargar los Pokémon. Intenta recargar la página.";
+                errorMessage = "No se encontró cadena evolutiva para este Pokémon.";
             }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Ocurrió un error al cargar los datos: {ex.Message}";
-            Console.WriteLine(errorMessage);
+            errorMessage = $"Error al obtener la cadena evolutiva: {ex.Message}";
         }
     }
 
-
-    public string GetPokemonImageUrl(string pokemonUrl)
+    private string GetPokemonId(string pokemonUrl)
     {
-        var id = pokemonUrl.TrimEnd('/').Split('/').Last();
-        return $"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{id}.png";
-    }
-
-    public string GetPokemonId(string pokemonUrl)
-    {
-        var id = pokemonUrl.TrimEnd('/').Split('/').Last();
-        return id;
+        return pokemonUrl.TrimEnd('/').Split('/').Last();
     }
 }
-
-
-
-<MudDivider/>
-
-<text style="max-height: 300px; object-fit: contain;">Si no conoces los nombres de los pokemon, intenta ir al </text> 
-<MudElement HtmlTag="a"
-            Class="ms-1"
-            Style="color:red;font-weight:bold;"
-            href="/pokelist"
-            rel="noopener noreferrer">
-    Listado Pokemon
-</MudElement>
