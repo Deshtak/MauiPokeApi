@@ -27,14 +27,24 @@
     }
     else if (evolutionChain != null)
     {
-        <MudList T="string">
+        <MudGrid>
             @foreach (var evo in evolutionChain)
             {
-                <MudListItem>
-                    <MudText Typo="Typo.body1">@evo</MudText>
-                </MudListItem>
+                <MudItem xs="12" sm="6" md="4">
+                    <MudPaper Class="p-4 text-center">
+                        @if (pokemonData.ContainsKey(evo))
+                        {
+                            <MudImage Src="@GetPokemonImageUrl(pokemonData[evo].Id)" Alt="@evo" Width="150" Height="150" Class="mb-2" />
+                            <MudText Typo="Typo.h6">@evo.ToUpper()</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body1" Color="Color.Info">Cargando datos...</MudText>
+                        }
+                    </MudPaper>
+                </MudItem>
             }
-        </MudList>
+        </MudGrid>
     }
 </MudContainer>
 
@@ -43,6 +53,7 @@
     private ListaInfo? selectedPokemon;
     private List<string>? evolutionChain;
     private string errorMessage = "";
+    private Dictionary<string, Pokemon> pokemonData = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -63,6 +74,8 @@
         try
         {
             errorMessage = "";
+            evolutionChain = null;
+            pokemonData.Clear();
             var chainUrl = await PokeApiService.GetEvolutionChainUrlAsync(selectedPokemon.Name);
 
             if (string.IsNullOrEmpty(chainUrl))
@@ -77,10 +90,27 @@
             {
                 errorMessage = "No se encontró cadena evolutiva para este Pokémon.";
             }
+            foreach (var pokemonName in evolutionChain)
+            {
+                if (!pokemonData.ContainsKey(pokemonName))
+                {
+                    var pokemon = await PokeApiService.GetPokemonAsync(pokemonName);
+                    if (pokemon != null)
+                    {
+                        pokemonData[pokemonName] = pokemon;
+                    }
+                }
+            }
+
         }
         catch (Exception ex)
         {
             errorMessage = $"Error al obtener la cadena evolutiva: {ex.Message}";
         }
+    }
+    private string GetPokemonImageUrl(int id)
+    {
+        // Las imágenes usan el ID del Pokémon directamente desde la API
+        return $"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/{id}.png";
     }
 }
