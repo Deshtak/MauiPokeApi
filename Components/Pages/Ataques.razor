@@ -5,14 +5,24 @@
 @inject NavigationManager NavigationManager
 @inject SharedMoveService SharedMoveService
 
-
 <MudContainer>
     <MudSpacer />
-    <MudTextField OnKeyUp="HandleKeyUp" @bind-Value="pokemonMove" Label="Buscar movimiento" Variant="Variant.Outlined" Color="Color.Primary" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary" Disabled="@enabledvar" />
+
+    <!-- Autocomplete para movimientos -->
+    <MudAutocomplete T="string"
+                     Label="Buscar movimiento"
+                     @bind-Value="pokemonMove"
+                     SearchFunc="SearchMoves"
+                     Placeholder="Escribe el nombre de un ataque"
+                     Variant="Variant.Outlined"
+                     Adornment="Adornment.End"
+                     AdornmentIcon="@Icons.Material.Filled.Search"
+                     AdornmentColor="Color.Secondary" />
+
     <MudText Typo="Typo.h4" Class="red Default white-text shades-text text-center mb-4 rounded-lg">Directorio de movimientos</MudText>
 
     <MudFab OnClick="SearchByButton" Color="Color.Primary" Class="mt-2 ml-2" Disabled="@Dissearch" StartIcon="@Icons.Material.Filled.Search">Buscar</MudFab>
-    <MudFab OnClick="ClearFields" Color="Color.Primary" Class="@clase" Disabled="@Disclear" StartIcon="@iconchange" >
+    <MudFab OnClick="ClearFields" Color="Color.Primary" Class="@clase" Disabled="@Disclear" StartIcon="@iconchange">
         @if (_processing)
         {
             <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
@@ -24,13 +34,9 @@
     </MudFab>
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="@progressvisibilty" />
 
-
- 
-
     @if (movelist != null)
     {
         <MudCard Class="mt-4" Style="background-color: #FFFFFF; border: 2px solid #FF0000; border-radius: 16px;">
-            
             <MudCardContent>
                 <MudText Align="Align.Center" Typo="Typo.h5" Color="Color.Primary">@movelist.Name.ToUpper()</MudText>
                 <MudText Align="Align.Center" Typo="Typo.subtitle1" Color="Color.Primary">ID: @movelist.Id</MudText>
@@ -38,7 +44,7 @@
                 <MudText Align="Align.Center" Typo="Typo.subtitle1" Color="Color.Primary">PowerPoints: @movelist.Pp</MudText>
                 <MudText Align="Align.Center" Typo="Typo.subtitle1" Color="Color.Primary">Priority: @movelist.Priority</MudText>
                 <MudText Align="Align.Center" Typo="Typo.subtitle1" Color="Color.Primary">Accuracy: @movelist.Accuracy</MudText>
-                
+
                 <MudChipSet Style="display: flex; justify-content: center;" T="string">
                     @if (movelist.Effect_Entries != null && movelist.Effect_Entries.Any())
                     {
@@ -59,8 +65,6 @@
                         <MudText Typo="Typo.subtitle1" Color="Color.Warning">No hay efectos disponibles para este movimiento.</MudText>
                     }
                 </MudChipSet>
-                
-                
             </MudCardContent>
         </MudCard>
     }
@@ -68,25 +72,35 @@
     {
         <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
     }
-
-
 </MudContainer>
 
-
-
-@code{
+@code {
     private string? errorMessage;
     private bool _processing = false;
     private static Movelist? movelist;
     private string pokemonMove = string.Empty;
-    private bool enabledvar=false;
+    private bool enabledvar = false;
     private bool Dissearch = false;
     private bool Disclear = true;
     private string iconchange = @Icons.Material.Filled.Cancel;
-    private bool chargev = true;
     private string clase = "invisible";
     private string progressvisibilty = "invisible";
-    public string? QueryMoveName { get; set; }
+
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        // Reinicia las variables
+        pokemonMove = string.Empty;
+        movelist = null;
+        errorMessage = null;
+        enabledvar = false;
+        Dissearch = false;
+        Disclear = true;
+        clase = "invisible";
+        progressvisibilty = "invisible";
+    }
 
 
     protected override async Task OnInitializedAsync()
@@ -96,125 +110,79 @@
             pokemonMove = SharedMoveService.SelectedMove;
             await FetchMoves();
         }
-        else if (!string.IsNullOrEmpty(QueryMoveName))
-        {
-            pokemonMove = QueryMoveName;
-            await FetchMoves();
-        }
     }
 
-
-    private async void OnMoveSelected()
+    private async Task<IEnumerable<string>> SearchMoves(string value, CancellationToken cancellationToken)
     {
-        Console.WriteLine($"SelectedMove: {SharedMoveService.SelectedMove}");
-        if (!string.IsNullOrEmpty(SharedMoveService.SelectedMove))
-        {
-            pokemonMove = SharedMoveService.SelectedMove;
-            await FetchMoves();
-            StateHasChanged();
-        }
-        else
-        {
-            Console.WriteLine("SelectedMove está vacío o es nulo.");
-        }
-    }
+        // Llama al método en PokeApiService para obtener los nombres de movimientos
+        var allMoves = await PokeApiService.GetAllMovesAsync();
+        if (string.IsNullOrWhiteSpace(value))
+            return allMoves;
 
-
-    private async void ClearFields()
-    {
-        if (pokemonMove != string.Empty)
-        {
-            _processing = true;
-            clase = "invisible";
-            progressvisibilty = "my-7";
-            await Task.Delay(1000);
-            progressvisibilty = "invisible";
-            pokemonMove = string.Empty;
-            Console.WriteLine(pokemonMove);
-            movelist = null;
-            Console.WriteLine(movelist);
-            errorMessage = null;
-            _processing = false;
-            Dissearch = false;
-            Disclear = true;
-            enabledvar = false;
-            StateHasChanged();
-        }
-        else
-        {
-            errorMessage = "El campo esta vacio, no hay nada que borrar";
-        }
-
-    }
-
-    private async Task HandleKeyUp(KeyboardEventArgs e)
-    {
-        if (pokemonMove != string.Empty)
-        {
-            if (e.Key == "Enter")
-            {
-                await FetchMoves();
-            }
-        }
-        else
-        {
-            if (e.Key == "Enter")
-            {
-                errorMessage = $"Error al buscar el Pokémon: No se inserto ningun nombre";
-            }
-
-        }
-
-
-    }
-
-    private async Task SearchByButton()
-    {
-        if (pokemonMove != string.Empty)
-        {
-            await FetchMoves();
-        }
-        else
-        {
-            errorMessage = $"Error al buscar el Movimiento: No se inserto ningun nombre o ID";
-        }
+        return allMoves.Where(move => move.Contains(value, StringComparison.OrdinalIgnoreCase));
     }
 
     private async Task FetchMoves()
     {
-            try
+        try
+        {
+            errorMessage = null;
+            movelist = await PokeApiService.GetMovesAsync(pokemonMove.ToLower());
+            if (movelist != null)
             {
-                errorMessage = null;
-                movelist = await PokeApiService.GetMovesAsync(pokemonMove.ToLower());
-
-                if (movelist != null)
-                {
-                    enabledvar = true;
-                    Dissearch = true;
-                    Disclear = false;
-                    clase = "mt-2 ml-2";
-                }
-                else
-                {
+                enabledvar = true;
+                Dissearch = true;
+                Disclear = false;
+                clase = "mt-2 ml-2";
+            }
+            else
+            {
                 errorMessage = "No se pudo encontrar el Movimiento. Verifica el nombre ingresado.";
-                }
             }
-            catch (Exception ex)
-            {
-                movelist = null;
-                errorMessage = $"Error al buscar el Movimiento: {ex.Message}";
-            }
+        }
+        catch (Exception ex)
+        {
+            movelist = null;
+            errorMessage = $"Error al buscar el Movimiento: {ex.Message}";
+        }
+    }
+
+    private async Task SearchByButton()
+    {
+        if (!string.IsNullOrWhiteSpace(pokemonMove))
+        {
+            await FetchMoves();
+        }
+        else
+        {
+            errorMessage = $"Error al buscar el Movimiento: No se insertó ningún nombre o ID";
+        }
+    }
+
+    private async void ClearFields()
+    {
+        pokemonMove = string.Empty;
+        movelist = null;
+        errorMessage = null;
+        enabledvar = false;
+        Dissearch = false;
+        Disclear = true;
+        clase = "invisible";
+        progressvisibilty = "invisible";
     }
 
     public void Dispose()
-    {
-        // Desuscribirse del evento para evitar memory leaks.
-        SharedMoveService.OnMoveSelected -= OnMoveSelected;
-    }
+{
+    // Reinicia valores al salir del componente
+    pokemonMove = string.Empty;
+    movelist = null;
+    errorMessage = null;
+    enabledvar = false;
+    Dissearch = false;
+    Disclear = true;
+    clase = "invisible";
+    progressvisibilty = "invisible";
 
-    protected override void OnInitialized()
-    {
-        // Suscribirse al evento cuando el componente se inicializa.
-        SharedMoveService.OnMoveSelected += OnMoveSelected;
-    }
+}
+
 }

@@ -75,6 +75,15 @@ public class PokeApiService
     }
 
 
+    public async Task<List<string>> GetAllMovesAsync()
+    {
+        var request = new RestRequest("move?limit=1000", Method.Get);
+        var response = await _client.GetAsync<MoveListResponse>(request);
+
+        return response?.Results?.Select(r => r.Name).ToList() ?? new List<string>();
+    }
+
+
 
 
     //Cadena evolutiva
@@ -132,11 +141,23 @@ public class PokeApiService
         }
     }
 
+    //clase para movimientos en lista
 
+    public class MoveListResponse
+    {
+        public List<MoveResult> Results { get; set; }
+    }
+
+    public class MoveResult
+    {
+        public string Name { get; set; }
+        public string Url { get; set; }
+    }
 
 
 
     //Clase para la cadena evolutiva
+
 
     public class SpeciesResponse
     {
