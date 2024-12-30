@@ -19,7 +19,18 @@
 
 <MudContainer MaxWidth="MaxWidth.Medium">
     <MudText Typo="Typo.h4" Class="red Default white-text shades-text text-center mb-4 rounded-lg" >Pokédex</MudText>
-    <MudTextField OnKeyUp="HandleKeyUp" @bind-Value="pokemonName" Label="Buscar Pokémon" Variant="Variant.Outlined" Color="Color.Primary" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Secondary" />
+    <MudAutocomplete T="string"
+                     @bind-Value="pokemonName"
+                     Label="Buscar Pokémon"
+                     Variant="Variant.Outlined"
+                     Color="Color.Primary"
+                     Adornment="Adornment.End"
+                     AdornmentIcon="@Icons.Material.Filled.Search"
+                     AdornmentColor="Color.Secondary"
+                     SearchFunc="SearchPokemonAsync"
+                     OnItemSelected="OnPokemonSelected" />
+
+
     <MudButton OnClick="SearchByButton" Color="Color.Primary" Class="mt-2 ml-2">Buscar</MudButton>
     <MudButton OnClick="ClearFields" Color="Color.Primary" Class="mt-2 ml-2">
         @if (_processing)
@@ -168,6 +179,35 @@
     private void NavigateToPokedex(string pokemonMove)
     {
         NavigationManager.NavigateTo($"/?pokemonMove={pokemonMove}");
+    }
+
+
+    private async Task<IEnumerable<string>> SearchPokemonAsync(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return Array.Empty<string>();
+        }
+
+        try
+        {
+            var pokemonList = await PokeApiService.GetPokeListAsync(); // Obtiene la lista de Pokémon.
+            return pokemonList
+                .Where(p => p.Name.Contains(value, StringComparison.OrdinalIgnoreCase))
+                .Select(p => p.Name); // Filtra los nombres que coincidan.
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al buscar Pokémon: {ex.Message}");
+            return Array.Empty<string>();
+        }
+    }
+
+
+    private async Task OnPokemonSelected(string selectedPokemon)
+    {
+        pokemonName = selectedPokemon;
+        await FetchPokemon(); // Llama a tu método existente para buscar el Pokémon.
     }
 
 
